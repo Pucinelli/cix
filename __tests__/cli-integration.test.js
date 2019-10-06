@@ -21,8 +21,8 @@ test('generates file', async () => {
   expect(output).toContain('Generated file at models/foo-model.js')
   const foomodel = filesystem.read('models/foo-model.js')
 
-  expect(foomodel).toContain(`module.exports = {`)
-  expect(foomodel).toContain(`name: 'foo'`)
+  expect(foomodel).toContain('module.exports = {')
+  expect(foomodel).toContain('name: \'foo\'')
 
   // cleanup artifact
   filesystem.remove('models')
