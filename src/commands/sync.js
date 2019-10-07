@@ -9,13 +9,11 @@ module.exports = {
       return
     }
 
-    /**
-     * this connection does not works
-     * 
-     * but it serves as a """functional""" placeholder for the future communication with mavex
-     */
-    const net = require('net')
+    const Primus = require('../config/socket');
+    const client = new Primus('http://localhost:8080');
   
+    client.emit('cix:startup')
+
     const STATUS = { OK: 0, ERR: 1 }
     const verbose = (msg, mode = 'info') => {
       if (parameters.options.verbose || parameters.options.v)
@@ -25,12 +23,6 @@ module.exports = {
       verbose('Replying status to server')
       client.emit('cix:status', { projectId, status, req })
     }
-
-    const client = net.createConnection({ port: 8080 }, () => {
-      print.info(`Connecting to project with token ${parameters.first}`)
-      client.emit('cix:startup')
-    })
-
     
     client.on('server:fetchProjectData', data => {
       print.info(`Handling data: ${data}`)
