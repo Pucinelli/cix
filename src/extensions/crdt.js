@@ -1,29 +1,24 @@
 module.exports = toolbox => {
 
   toolbox.crdt = {
-    build: async data => {
+    writeAsync: async data => {
+      const { file, content } = data
       const { filesystem } = toolbox
-      const { join } = require('path')
-      const { KSeq } = require('kseq')
+      const { KSeq } = require('../config/kseq/index')
       
-      for (let file of data) {
-        const { filename, extension, path, content } = file
-        
-        const kseq = new KSeq()
-        const fullFileName = join(path, filename + extension)
+      const kseq = new KSeq()
 
-        for (let { type, data, pos } of content) {
-          // console.log({ type, data, pos })
-          if (type === '+')
-            kseq.insert(data, pos)
-          else
-            kseq.remove(pos)
-        }
-
-        const contentBuilt = kseq.toArray().join('')
-        //await filesystem.writeAsync(fullFileName, contentBuilt)
-        console.log(contentBuilt)
+      for (let { type, data, pos } of content) {
+        // console.log({ type, data, pos })
+        if (type === '+')
+          kseq.insert(data, pos)
+        else
+          kseq.remove(pos)
       }
+
+      const contentBuilt = kseq.toArray().join('')
+      await filesystem.writeAsync(file, contentBuilt)
+      //console.log(contentBuilt)
       
     }
   }
