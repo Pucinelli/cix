@@ -2,7 +2,7 @@ module.exports = {
   name: 'new',
   alias: 'n',
   run: async toolbox => {
-    const path = require('path')
+    const { normalize } = require('path')
     const { print, parameters, filesystem } = toolbox
 
     if (!parameters.first) {
@@ -10,17 +10,15 @@ module.exports = {
       return
     }
 
-    const name = path.resolve(path.normalize(parameters.first))
+    const path = normalize(parameters.first)
+    const name = path.includes(filesystem.separator) 
+      ? path.substr(path.indexOf(filesystem.separator))
+      : path
     
-    if (await filesystem.existsAsync(parameters.first))
-      filesystem.dir(name)
-        .write('cix.json', {
-          name,
-          platform: {
-            name: 'mavex'
-          }
-        })
-    else
-      print.error(`There is already a file named ${parameters.first}`)
+    if (await filesystem.existsAsync(path)) {
+      const dir = await filesystem.dirAsync(path)
+      await dir.writeAsync('cix.json', { name, platform: { name: 'mavex' } })
+    } else
+      print.error(`There is already a file named ${path}`)
   }
 }
