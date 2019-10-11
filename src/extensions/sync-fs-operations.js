@@ -1,6 +1,5 @@
 module.exports = toolbox => {
   
-  // probably gonna rename this to something fs-related
   toolbox.operations = {
     createFile: async data => {
       const { 
@@ -8,7 +7,7 @@ module.exports = toolbox => {
       } = data
       const { filesystem } = toolbox
       const { join } = require('path')
-      const fullFilePath = join(path, filename)
+      const fullFilePath = join(...path, filename)
       
       if (isDirectory)
         await filesystem.dirAsync(fullFilePath)
@@ -19,58 +18,65 @@ module.exports = toolbox => {
     
     writeFile: async data => {
       const { 
-        content, path, filename, extension = ''
+        content, path, filename, extension
       } = data
-      const { filesystem } = toolbox
+      const { crdt } = toolbox
       const { join } = require('path')
-      const fullFilePath = join(path, filename)
+      const fullFilePath = join(...path, filename)
       
-      await filesystem.writeAsync(fullFilePath + extension, content)
+      await crdt.writeAsync({ file: fullFilePath + extension, content })
     },
   
     
     removeFile: async data => {
       const { 
-        path, filename, extension = ''
+        path, filename, extension
       } = data
       const { filesystem } = toolbox
       const { join } = require('path')
-      const fullFilePath = join(path, filename)
+      const fullFilePath = join(...path, filename)
       
       await filesystem.removeAsync(fullFilePath + extension)
     },
   
     
     moveFile: async data => {
+      const { join } = require('path')
       const { from, to } = data
       const { filesystem } = toolbox
       
-      await filesystem.moveAsync(from, to)
+      const fromFile = join(...from.path, from.filename + from.extension)
+      const toFile = join(...to.path, to.filename + to.extension)
+      
+      await filesystem.moveAsync(fromFile, toFile)
     },
   
     // probably gonna move this to other file
     shellCommand: async data => {
       const { spawn } = require('child_process')
-      const { command, parameters } = data
+      const { client, command, parameters } = data
 
-      if (processStillRunning) {
-        const process = getProcessSomehow()
-        process.stdin.write(data.input)
-
+      if (false) {
+        // const process = getProcessSomehow()
+        // process.stdin.write(data.input)
       } else {
         const process = spawn(command, parameters)
       
         process.stdout.on('data', data => {
-          
+          const isStillAlive = process.connected
+          client.emit('cix:shellOutput', { output: data.toString(), isStillAlive })
         })
         
         process.stderr.on('data', data => {
-          
+          const isStillAlive = process.connected
+          client.emit('cix:shellOutput', { output: data.toString(), isStillAlive })
         })
         
         process.on('close', code => {
-          
+          client.emit('cix:status', { req: 'server:shellCommand', status: code })
         })
+
+        return process
       }
     }
   }
