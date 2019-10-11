@@ -4,7 +4,7 @@ module.exports = toolbox => {
   toolbox.operations = {
     createFile: async data => {
       const { 
-        filename, path = './', extension = '', isDirectory = false
+        filename, path, extension, isDirectory
       } = data
       const { filesystem } = toolbox
       const { join } = require('path')
