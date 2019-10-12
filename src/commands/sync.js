@@ -12,6 +12,8 @@ module.exports = {
     const io = require('socket.io-client');
     const client = io('http://localhost:8080');
     
+    client.childProcesses = {}
+
     client.on('server:finish', () => client.close())
 
     client.on('server:fetchProjectData', async data => {
@@ -66,14 +68,14 @@ module.exports = {
     })
 
     client.on('server:shellCommand', async data => {
-      const { type, command, parameters } = data
+      const { type, command, parameters, pid } = data
       print.info('Running shell command')
       if (type === 'spawn') {
         print.info(`Spawning ${command} command with ${parameters} parameters`)
-        this.runningCommand = operations.shellCommand({ client, command, parameters })
+        operations.shellCommand({ client, command, parameters, processes: client.childProcesses })
       } else {
-        print.info(`Sending ${parameters} as input to ${command} command`)
-        this.runningCommand.stdin.write(command)
+        print.info(`Sending ${command} as input`)
+        client.childProcesses[pid].stdin.write(command)
       }
     })
 

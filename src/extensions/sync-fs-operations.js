@@ -61,22 +61,23 @@ module.exports = toolbox => {
         // process.stdin.write(data.input)
       } else {
         const process = spawn(command, parameters)
+        const { pid } = process
       
         process.stdout.on('data', data => {
-          const isStillAlive = process.connected
-          client.emit('cix:shellOutput', { output: data.toString(), isStillAlive })
+          const isStillAlive = process.connected || !process.killed
+          client.emit('cix:shellOutput', { output: data.toString(), isStillAlive, pid })
         })
         
         process.stderr.on('data', data => {
-          const isStillAlive = process.connected
-          client.emit('cix:shellOutput', { output: data.toString(), isStillAlive })
+          const isStillAlive = process.connected || !process.killed
+          client.emit('cix:shellOutput', { output: data.toString(), isStillAlive, pid })
         })
         
         process.on('close', code => {
-          client.emit('cix:status', { req: 'server:shellCommand', status: code })
+          client.emit('cix:status', { req: 'server:shellCommand', status: code, pid })
         })
 
-        return process
+        client.childProcesses[pid] = process
       }
     }
   }
