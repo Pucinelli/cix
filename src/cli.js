@@ -1,22 +1,16 @@
 const { build } = require('gluegun')
 
-/**
- * Create the cli and kick it off
- */
-async function run (argv) {
-  // create a CLI runtime
+async function run(argv) {
   const cli = build()
     .brand('cix')
     .src(__dirname)
     .plugins('./node_modules', { matching: 'cix-*', hidden: true })
-    .help() // provides default for help, h, --help, -h
-    .version() // provides default for version, v, --version, -v
+    .help()
+    .version()
     .create()
 
-  // and run it
   const toolbox = await cli.run(argv)
-
-  // send it back (for testing, mostly)
+  
   return toolbox
 }
 
