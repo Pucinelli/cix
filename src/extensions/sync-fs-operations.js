@@ -10,9 +10,9 @@ module.exports = toolbox => {
       const fullFilePath = join(...path, filename)
       
       if (isDirectory)
-        await filesystem.dirAsync(fullFilePath)
+        return await filesystem.dirAsync(fullFilePath)
       else
-        await filesystem.fileAsync(fullFilePath + extension)
+        return await filesystem.fileAsync(fullFilePath + extension)
     },
   
     
@@ -24,7 +24,7 @@ module.exports = toolbox => {
       const { join } = require('path')
       const fullFilePath = join(...path, filename)
       
-      await crdt.writeAsync({ file: fullFilePath + extension, content })
+      return await crdt.writeAsync({ file: fullFilePath + extension, content })
     },
   
     
@@ -36,7 +36,7 @@ module.exports = toolbox => {
       const { join } = require('path')
       const fullFilePath = join(...path, filename)
       
-      await filesystem.removeAsync(fullFilePath + extension)
+      return await filesystem.removeAsync(fullFilePath + extension)
     },
   
     
@@ -48,7 +48,7 @@ module.exports = toolbox => {
       const fromFile = join(...from.path, from.filename + from.extension)
       const toFile = join(...to.path, to.filename + to.extension)
       
-      await filesystem.moveAsync(fromFile, toFile)
+      return await filesystem.moveAsync(fromFile, toFile)
     },
   
     // probably gonna move this to other file
@@ -60,7 +60,7 @@ module.exports = toolbox => {
         // const process = getProcessSomehow()
         // process.stdin.write(data.input)
       } else {
-        const process = spawn(command, parameters)
+        const process = spawn(command, parameters, { shell: true })
         const { pid } = process
       
         process.stdout.on('data', data => {
