@@ -6,7 +6,7 @@ module.exports = {
 
     const name = parameters.first
     const command = parameters.array.slice(1)
-      .map(it => it.includes(' ') ? `'${it}'` : it)
+      .map(it => it.includes(' ') ? `"${it}"` : it)
       .join(' ')
     
     if (!name) {

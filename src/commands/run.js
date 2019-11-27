@@ -5,17 +5,21 @@ module.exports = {
     const { print, parameters, configManager, childProcess } = toolbox
     const { macros } = await configManager.load()
 
-    const command = Object.keys(macros || {}).includes(parameters.first)
-      ? macros[parameters.first]
-      : parameters.first
+    const exec = Object.keys(macros).includes(parameters.first)
+      ? {
+        command: macros[parameters.first],
+        options: parameters.argv.slice(parameters.argv.indexOf(parameters.first) + 1).join(' ')
+      }
+      : {
+        command: parameters.first,
+        options: parameters.argv.slice(parameters.argv.indexOf(parameters.first) + 1).join(' ')
+      }
 
-    if (!command) {
+    if (!exec.command) {
       print.error('Error: No command specified')
       return
     }
 
-    const options = parameters.argv.slice(parameters.argv.indexOf(command) + 1).join(' ')
-
-    await childProcess.run(`${command} ${options}`)
+    await childProcess.run(`${exec.command} ${exec.options}`)
   }
 }
