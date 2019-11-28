@@ -1,25 +1,18 @@
 module.exports = {
   name: 'run',
   alias: 'r',
+  description: 'Run a shell or a macro command inside cix\'s environment',
   run: async toolbox => {
-    const { print, parameters, configManager, childProcess } = toolbox
-    const { macros } = await configManager.load()
+    const { print, parameters, childProcess } = toolbox
 
-    const exec = Object.keys(macros).includes(parameters.first)
-      ? {
-        command: macros[parameters.first],
-        options: parameters.argv.slice(parameters.argv.indexOf(parameters.first) + 1).join(' ')
-      }
-      : {
-        command: parameters.first,
-        options: parameters.argv.slice(parameters.argv.indexOf(parameters.first) + 1).join(' ')
-      }
-
-    if (!exec.command) {
+    if (!parameters.first) {
       print.error('Error: No command specified')
       return
     }
 
-    await childProcess.run(`${exec.command} ${exec.options}`)
+    await childProcess.run(
+      parameters.first,
+      parameters.argv.slice(parameters.argv.indexOf(parameters.first) + 1)
+    )
   }
 }

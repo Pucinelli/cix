@@ -1,6 +1,7 @@
 module.exports = {
   name: 'macro',
   alias: 'm',
+  description: 'Define or redefine a macro command to be run cix\'s environment',
   run: async toolbox => {
     const { print, parameters, configManager } = toolbox
 

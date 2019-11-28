@@ -1,34 +1,33 @@
 module.exports = toolbox => {
 
-  const { print } = toolbox
-
   toolbox.childProcess = {
-    run: async (command) => {
-      const { exec } = require('child_process')
+    run: async (command, options = []) => {
+      const { print, configManager } = toolbox
+      const { spawn } = require('child_process')
+      const { macros, commandPolicies } = await configManager.load()
 
-      const config = await toolbox.configManager.load()
+      const execCommand = command in macros ? macros[command] : command
+      const sanitizedOptions = options.map(opt => opt.includes(' ') ? `"${opt}"` : opt).join(' ')
+
       const env = Object.assign(
-        config.commandPolicies.useEnvironment
+        commandPolicies.useEnvironment
           ? process.env
           : {},
-        config.commandPolicies.environmentVariables)
+        commandPolicies.environmentVariables)
 
-      exec(command, { env, shell: true }, (error, stdout, stderr) => {
-        const output = {
-          error: error,
-          stdout: stdout.trim(),
-          stderr: stderr.trim(),
-        }
-        if (output.error) {
-          print.error(output.error)
-          return
-        }
-        if (output.stdout)
-          print.info(output.stdout)
-        if (output.stderr)
-          print.info(output.stderr)
-      })
+      const child = spawn(`${execCommand} ${sanitizedOptions}`, { env, shell: true })
+
+      child.stdout.on('data', data => {
+        print.info(data.toString())
+      });
+
+      child.stderr.on('data', data => {
+        print.error(data.toString())
+      });
+
+      child.on('close', code => {
+        print.info(`Command \`${command}\` exited with code ${code}`);
+      });
     }
   }
-
 }

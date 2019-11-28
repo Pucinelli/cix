@@ -10,7 +10,6 @@ async function run(argv) {
     .create()
 
   const toolbox = await cli.run(argv)
-  
   return toolbox
 }
 

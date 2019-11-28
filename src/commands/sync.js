@@ -1,6 +1,7 @@
 module.exports = {
   name: 'sync',
   alias: 's',
+  description: 'Start sync process of cix with the default platform',
   run: async toolbox => {
     const { print, parameters, operations } = toolbox
 
