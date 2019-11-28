@@ -1,7 +1,7 @@
 {
   "name": "cix",
   "version": "0.0.1",
-  "description": "cix CLI",
+  "description": "An Continuous Integration and Remote Execution Tool",
   "private": true,
   "bin": {
     "cix": "bin/cix"
