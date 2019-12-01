@@ -1,7 +1,7 @@
 module.exports = toolbox => {
 
   toolbox.childProcess = {
-    run: async (command, options = []) => {
+    run: async (command, options = [], doAfter = {}) => {
       const { print, configManager } = toolbox
       const { spawn } = require('child_process')
       const { macros, commandPolicies } = await configManager.load()
@@ -15,18 +15,25 @@ module.exports = toolbox => {
           : {},
         commandPolicies.environmentVariables)
 
-      const child = spawn(`${execCommand} ${sanitizedOptions}`, { env, shell: true })
+      toolbox.runningProcess = spawn(`${execCommand} ${sanitizedOptions}`, { env, shell: true })
 
-      child.stdout.on('data', data => {
+      toolbox.runningProcess.stdout.on('data', data => {
         print.info(data.toString())
+        if (doAfter.stdout)
+          doAfter.stdout(data)
       });
 
-      child.stderr.on('data', data => {
+      toolbox.runningProcess.stderr.on('data', data => {
         print.error(data.toString())
+        if (doAfter.stderr)
+          doAfter.stderr(data)
       });
 
-      child.on('close', code => {
+      toolbox.runningProcess.on('close', code => {
         print.info(`Command \`${command}\` exited with code ${code}`);
+        toolbox.runningProcess = undefined
+        if (doAfter.close)
+          doAfter.close(code)
       });
     }
   }
