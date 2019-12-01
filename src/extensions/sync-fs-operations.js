@@ -1,84 +1,81 @@
 module.exports = toolbox => {
-  
+
+  const initCrdt = async data => {
+    if (data.children)
+      for (const child of data.children)
+        initCrdt(child)
+    else if (data.content)
+      for (const op of data.content.s)
+        data.crdt.append(op[1])
+  }
+
   toolbox.operations = {
-    createFile: async data => {
-      const { 
-        filename, path, extension, isDirectory
-      } = data
-      const { filesystem } = toolbox
-      const { join } = require('path')
-      const fullFilePath = join(...path, filename)
-      
-      if (isDirectory)
-        return await filesystem.dirAsync(fullFilePath)
-      else
-        return await filesystem.fileAsync(fullFilePath + extension)
-    },
-  
-    
-    writeFile: async data => {
-      const { 
-        content, path, filename, extension
-      } = data
-      const { crdt } = toolbox
-      const { join } = require('path')
-      const fullFilePath = join(...path, filename)
-      
-      return await crdt.writeAsync({ file: fullFilePath + extension, content })
-    },
-  
-    
-    removeFile: async data => {
-      const { 
-        path, filename, extension
-      } = data
-      const { filesystem } = toolbox
-      const { join } = require('path')
-      const fullFilePath = join(...path, filename)
-      
-      return await filesystem.removeAsync(fullFilePath + extension)
-    },
-  
-    
-    moveFile: async data => {
-      const { join } = require('path')
-      const { from, to } = data
-      const { filesystem } = toolbox
-      
-      const fromFile = join(...from.path, from.filename + from.extension)
-      const toFile = join(...to.path, to.filename + to.extension)
-      
-      return await filesystem.moveAsync(fromFile, toFile)
-    },
-  
-    // probably gonna move this to other file
-    shellCommand: async data => {
-      const { spawn } = require('child_process')
-      const { client, command, parameters } = data
+    initProject: async data => {
+      const { print, filesystem, configManager } = toolbox
+      const { existsAsync, cwd, resolve } = filesystem
+      const deepAssign = require('assign-deep')
 
-      if (false) {
-        // const process = getProcessSomehow()
-        // process.stdin.write(data.input)
+      const currentCixJson = resolve(cwd(), 'cix.json')
+
+      if (await existsAsync(currentCixJson)) {
+        return deepAssign(await configManager.load(), require(currentCixJson))
+      } else if (!await existsAsync(resolve(cwd(), data.projectName))) {
+        await filesystem.dirAsync(data.projectName)
+        process.chdir(data.projectName)
+        await filesystem.writeAsync('cix.json', data)
+        return deepAssign(await configManager.load(), data)
       } else {
-        const process = spawn(command, parameters, { shell: true })
-        const { pid } = process
-      
-        process.stdout.on('data', data => {
-          const isStillAlive = process.connected || !process.killed
-          client.emit('cix:shellOutput', { output: data.toString(), isStillAlive, pid })
-        })
-        
-        process.stderr.on('data', data => {
-          const isStillAlive = process.connected || !process.killed
-          client.emit('cix:shellOutput', { output: data.toString(), isStillAlive, pid })
-        })
-        
-        process.on('close', code => {
-          client.emit('cix:status', { req: 'server:shellCommand', status: code, pid })
-        })
-
-        client.childProcesses[pid] = process
+        print.error(`There is already a directory named '${data.projectName}' here`)
       }
+    },
+
+    createFile: async data => {
+      const { filesystem, crdt, projectState } = toolbox
+      const { KSeq } = require('../config/kseq/index')
+
+      data.crdt = new KSeq(data.path)
+      projectState[data.path] = data
+
+      const filename = data.path.replace(/\//g, filesystem.separator)
+      initCrdt(data)
+
+      if (!!data.children) {
+        await filesystem.dirAsync(filename)
+      } else {
+        await filesystem.fileAsync(filename)
+        await crdt.writeAsync(filename)
+      }
+    },
+
+
+    writeFile: async data => {
+      const { crdt } = toolbox
+      return await crdt.writeAsync(data)
+    },
+
+
+    removeFile: async data => {
+      const { filesystem, projectState } = toolbox
+      const filename = data.replace(/\//g, filesystem.separator)
+
+      delete projectState[filename]
+
+      return await filesystem.removeAsync(filename)
+    },
+
+
+    moveFile: async data => {
+      const { filesystem, projectState } = toolbox
+      const { from, to } = data
+
+      const fromFile = from.replace(/\//g, filesystem.separator)
+      const toFile = to.replace(/\//g, filesystem.separator)
+
+      projectState[fromFile].path = toFile
+      projectState[toFile] = projectState[fromFile]
+      delete projectState[fromFile]
+
+      return await filesystem.moveAsync(fromFile, toFile)
     }
   }
 }
