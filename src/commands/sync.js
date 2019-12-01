@@ -175,7 +175,7 @@ module.exports = {
         print.info('Verifying existence of running process')
 
       if (toolbox.runningProcess) {
-        if (options.testPolicies.logPolicies.input)
+        if (toolbox.projectConfig.commandPolicies.logPolicies.input)
           print.info('[STDIN] ' + data)
         toolbox.runningProcess.stdin.write(data + '\n')
       } else {
