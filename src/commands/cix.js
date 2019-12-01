@@ -3,7 +3,9 @@ module.exports = {
   hidden: true,
   description: 'Continuous Integration an Remote Execution Tool',
   run: async toolbox => {
-    const { print, parameters } = toolbox
+    const { print, parameters, configManager } = toolbox
+
+    configManager.parseArgOptions(parameters.options)
 
     if (parameters.first)
       print.error(`Error: Unknown parameter ${parameters.first}`)
