@@ -52,7 +52,7 @@ module.exports = toolbox => {
           print.info(`Command \`${command}\` exited with code ${code}`);
         if (verboseLevel >= 2)
           print.info(`Clearing up process`);
-        toolbox.runningProcess = undefined
+        delete toolbox.runningProcess
         if (doAfter.close)
           doAfter.close(code)
       });

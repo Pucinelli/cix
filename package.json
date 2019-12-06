@@ -26,6 +26,7 @@
     "assign-deep": "^1.0.1",
     "gluegun": "^4.0.1",
     "jwt-simple": "^0.5.6",
+    "localtunnel": "^2.0.0",
     "socket.io-client": "^2.3.0"
   },
   "devDependencies": {
